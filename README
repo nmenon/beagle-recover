@@ -1,0 +1,240 @@
+Hi
+It has been a few years since I looked at this.
+
+This was originally created in 2009 Jan
+I had blogged about this as well http://nishanthmenon.blogspot.com/2009/01/beagleboard-recovery-take-2.html
+Anyways, years since then, I have moved on to other things, So an last attempt to keep things in
+some location where people can use it.
+
+Test configuration:
+------------------
+Xubuntu 12.04 on an i7 Alienware M11x
+UART is over flyswatter rev B: http://www.tincantools.com/wiki/Flyswatter
+beagleboard used: rev C1D and B5 (my A5 revision board no longer powers up - guess I blew something there)
+
+What does this do?
+-----------------
+provide a simplified flashing environment - at least to have the image booting on the board
+
+By default, the images in this package result in the following beagleboard images in NAND flash:
+Texas Instruments X-Loader 1.4.2 (Jan 30 2009 - 19:16:17)
+Loading u-boot.bin from nand
+
+
+U-Boot 2009.01-01232-gcfca338 (Jan 30 2009 - 19:10:42)
+
+OMAP3530-GP rev 2, CPU-OPP2 L3-165MHz
+OMAP3 Beagle board + LPDDR/NAND
+DRAM:  256 MB
+NAND:  256 MiB
+In:    serial
+Out:   serial
+Err:   serial
+OMAP3 beagleboard.org # 
+
+
+NOTE: upstream u-boot, xloader, barebox etc: I am not sure of it's status.
+If you are courageous enough, do try replacing item by item to see it's impact.
+
+
+USAGE:
+------
+you need one USB port that is connected on your PC host port - dont use a hub, I cant say
+what usually happens when there are self powered hubs in the path.
+
+Use a decent serial port OR at least a decent USB2Serial convertor - I suggest flyswatter,
+if you dont have one, well.. it might just work still..
+
+Steps:
+1. see http://nishanthmenon.blogspot.com/2009/01/beagleboard-recovery-take-2.html
+   Caveats: it is sometimes known to create motion sickness- now you know why I dont
+   produce movies ;)
+
+rather straight forward
+A. plug in serial port, figure out which port it is on: /dev/ttyUSB0,1 or /dev/ttyS0 etc..
+   - NOTE: DONOT PLUG IN USB CABLE YET/POWER SUPPLY.
+B. Plug your beagle board to the port
+C. kill all minicom or picocom or other terminals which access serial port, e.g. /dev/ttyUSB1
+it usually happens - serial port used by another app.. it just does not work. example:
+$ lsof /dev/ttyUSB1
+COMMAND  PID   USER   FD   TYPE DEVICE SIZE/OFF  NODE NAME
+minicom 4381 nmenon    3u   CHR  188,1      0t0 27743 /dev/ttyUSB1
+Naah - kill the minicom before proceeding.
+D. once everything is clean, do ./recover_beagle.sh port
+	example:
+	./recover_beagle.sh /dev/ttyUSB1
+E. once the message appears, PRESS S1 and while pressed, plug in USB cable
+ - KEEP S1 pressed atleast for a few seconds for it to boot off usb.
+
+	$ ./recover_beagle.sh /dev/ttyUSB1
+	NOTE:
+	CRITICAL: USB MUST BE CONNECTED ON PC PORT directly (NOT THROUGH AN HUB)!!!!
+	CRITICAL: POLLING MODE USED - try NOT TO have CPU intensive tasks going on in background
+	Keep S1 pressed for 1 second at least after connecting usb cable.
+	When you see the message "Waiting for USB device..", Connect USB Cable to the board with the switch S1 pressed
+	[sudo] password for johndoe: 
+	Waiting for USB device vendorID=0x451and productID=0xD009:
+I kept S1 pressed and plugged in USB cable here
+	Dev #22: Texas Instruments - OMAP3430
+	Downloading file: 100.000% completed(38960/38960 bytes)
+	./target_files/u-boot-v2.bin downloaded successfully to target
+	Output:
+	loadb -f /dev/ram0
+	## Ready for binary (kermit) download to 0x00000000 offset on /dev/ram0 device at 115200 bps...
+	Match Found. Operation completed!
+	Downloading file: 7.172% completed(11700/163136 bytes)
+
+
+F. once it returns back to shell prompt, you can now plug off the USB cable. NAND flash is ready to boot.
+
+Trying to get the very latest U-boot:
+-------------------------------------
+*I HAVE NOT TRIED TO USE LATEST BINARIES FOR ANY OF THESE *
+As an quick test, I tried to replace u-boot.bin without any success!!!
+
+SPL:
+IF you have patience to do so, replace target_files/x-load.bin.ift with SPL image
+
+U-Boot:
+replace target_files/u-boot-v1.bin with u-boot.bin
+
+Barebox:
+replace target_files/u-boot-v2.bin with required image.
+
+I might as well suggest just to flash default images from 2009 and then
+try to replace as needed. the script for flashing has most of the old commands
+anyways, so should give you some guidance on how to replace.
+
+
+APPENDIX:
+--------
+FULL Flashing LOG:
+$ ./recover_beagle.sh /dev/ttyUSB1
+NOTE:
+CRITICAL: USB MUST BE CONNECTED ON PC PORT directly (NOT THROUGH AN HUB)!!!!
+CRITICAL: POLLING MODE USED - try NOT TO have CPU intensive tasks going on in background
+Keep S1 pressed for 1 second at least after connecting usb cable.
+When you see the message "Waiting for USB device..", Connect USB Cable to the board with the switch S1 pressed
+Waiting for USB device vendorID=0x451and productID=0xD009:
+Dev #23: Texas Instruments - OMAP3430
+Downloading file: 100.000% completed(38960/38960 bytes)
+./target_files/u-boot-v2.bin downloaded successfully to target
+Output:
+loadb -f /dev/ram0
+## Ready for binary (kermit) download to 0x00000000 offset on /dev/ram0 device at 115200 bps...
+Match Found. Operation completed!
+Downloading file: 100.000% completed(163136/163136 bytes)
+File Download completed
+Output:
+go 0x80000000
+## Starting application at 0x80000000 ...
+
+
+U-Boot 2009.01-01232-gcfca338 (Jan 30 2009 - 19:10:42)
+
+OMAP3530-GP rev 2, CPU-OPP2 L3-165MHz
+OMAP3 Beagle board + LPDDR/NAND
+DRAM:  256 MB
+NAND:  256 MiB
+In:    serial
+Match Found. Operation completed!
+Output:
+help
+?       - alias for 'help'
+autoscr - run script from memory
+base	- print or set address offset
+bdinfo  - print Board Info structure
+boot    - boot default, i.e., run 'bootcmd'
+bootd   - boot default, i.e., run 'bootcmd'
+bootm   - boot application image from memory
+cmp	- memory compare
+coninfo - print console devices and information
+cp	- memory copy
+crc32	- checksum calculation
+echo    - echo args to console
+exit    - exit script
+ext2load- load binary file from a Ext2 filesystem
+ext2ls  - list files in a directory (default /)
+fatinfo - print information about filesystem
+fatload - load binary file from a dos filesystem
+fatls   - list files in a directory (default /)
+fsinfo	- print information about filesystems
+fsload	- load binary file from a filesystem image
+go      - start application at address 'addr'
+help    - print online help
+icrc32  - checksum calculation
+iloop   - infinite loop on address range
+imd     - i2c memory display
+imm     - i2c memory modify (auto-incrementing)
+imw     - memory write (fill)
+imxtract- extract a part of a multi-image
+inm     - memory modify (constant address)
+iprobe  - probe to discover valid I2C chip addresses
+itest	- return true/false on integer compare
+loadb   - load binary file over serial line (kermit mode)
+loads   - load S-Record file over serial line
+loady   - load binary file over serial line (ymodem mode)
+loop	- infinite loop on address range
+ls	- list files in a directory (default /)
+md	- memory display
+mm	- memory modify (auto-incrementing)
+mmcinit - init mmc card
+mtest   - simple RAM test
+mw	- memory write (fill)
+nand    - NAND sub-system
+nandecc - switch OMAP3 NAND ECC calculation algorithm
+nboot   - boot from NAND device
+nm	- memory modify (constant address)
+printenv- print environment variables
+reset   - Perform RESET of the CPU
+run     - run commands in an environment variable
+saveenv - save environment variables to persistent storage
+setenv  - set environment variables
+showvar- print local hushshell variables
+sleep   - delay execution for some time
+test    - minimal test like /bin/sh
+version - print monitor version
+OMAP3 beagleboard.org #
+Match Found. Operation completed!
+Output:
+nand erase
+
+NAND erase: device 0 whole chip
+Erasing at 0xffe0000 -- 100% complete.
+OK
+OMAP3 beagleboard.org #
+Match Found. Operation completed!
+Output:
+nand write.i 80000000 80000 80000
+
+NAND write: device 0 offset 0x80000, size 0x80000
+ 524288 bytes written: OK
+OMAP3 beagleboard.org #
+Match Found. Operation completed!
+Output:
+loadb 80000000
+## Ready for binary (kermit) download to 0x80000000 at 115200 bps...
+Match Found. Operation completed!
+Downloading file: 100.000% completed(20392/20392 bytes)
+File Download completed
+Output:
+nandecc hw
+HW ECC selected
+OMAP3 beagleboard.org #
+Match Found. Operation completed!
+Output:
+nand write.i 80000000 0 80000
+
+NAND write: device 0 offset 0x0, size 0x80000
+ 524288 bytes written: OK
+OMAP3 beagleboard.org #
+Match Found. Operation completed!
+Output:
+setenv bootcmd;nandecc sw;saveenv
+SW ECC selected
+Saving Environment to NAND...
+Erasing Nand...
+Erasing at 0x260000 -- 100% complete.
+Writing to Nand... done
+OMAP3 beagleboard.org #
+Match Found. Operation completed!
